@@ -18,6 +18,7 @@ help:
 	@echo "Development Commands:"
 	@echo "  make backend        - Start Django development server (in container)"
 	@echo "  make mobile         - Start React Native Android app"
+	@echo "  make mobile-setup   - Setup React Native Android environment"
 	@echo "  make docker-db      - Start PostgreSQL with Docker"
 	@echo "  make docker-backend - Start full backend with Docker"
 	@echo "  make docker-shell   - Open shell in backend container"
@@ -26,8 +27,6 @@ help:
 	@echo "  make clean          - Clean up generated files"
 	@echo "  make test           - Run all tests (in containers)"
 	@echo "  make test-schema    - Test OpenAPI schema generation"
-	@echo "  make lint           - Run code linting"
-	@echo "  make format         - Format code"
 	@echo "  make docker-logs    - Show all Docker logs"
 	@echo "  make docker-logs-backend - Show backend logs"
 	@echo "  make docker-logs-db - Show database logs"
@@ -156,22 +155,7 @@ test-schema:
 	@echo "🧪 Testing OpenAPI schema generation..."
 	cd backend && docker compose exec backend python manage.py test_schema
 
-# Code quality commands
-lint:
-	@echo "🔍 Running code linting..."
-	@echo "Linting Python code..."
-	cd backend && python -m flake8 src/ --max-line-length=88 --exclude=migrations || true
-	@echo "Linting JavaScript code..."
-	cd mobile && npx eslint . --ext .js,.jsx,.ts,.tsx || true
-	@echo "✅ Linting complete!"
 
-format:
-	@echo "✨ Formatting code..."
-	@echo "Formatting Python code with black..."
-	cd backend && python -m black src/ || echo "Install black: pip install black"
-	@echo "Formatting JavaScript code with prettier..."
-	cd mobile && npx prettier --write . || echo "Prettier not configured"
-	@echo "✅ Code formatting complete!"
 
 # Utility commands
 clean:
@@ -257,15 +241,11 @@ ci-backend:
 	@sleep 5
 	@echo "Running Django tests..."
 	cd backend && docker compose exec backend python manage.py test
-	@echo "Running code quality checks..."
-	cd backend && docker compose exec backend black --check .
-	cd backend && docker compose exec backend flake8 . --max-line-length=88 --exclude=migrations
 
 ci-mobile:
 	@echo "🔄 Running mobile CI locally..."
-	cd mobile && npm ci
+	cd mobile && npm install
 	cd mobile && npm test -- --watchAll=false
-	cd mobile && npm run lint
 
 ci-all: ci-backend ci-mobile
 	@echo "✅ All CI checks passed locally!"

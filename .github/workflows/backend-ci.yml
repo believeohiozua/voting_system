@@ -11,6 +11,7 @@ on:
     paths:
       - "backend/**"
       - ".github/workflows/backend-ci.yml"
+  workflow_call:
 
 jobs:
   test:
@@ -85,34 +86,6 @@ jobs:
           file: ./backend/src/coverage.xml
           flags: backend
           name: backend-coverage
-
-  # lint:
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: "3.11"
-
-  #     - name: Install linting tools
-  #       run: |
-  #         pip install black flake8 isort
-
-  #     - name: Check code formatting with Black
-  #       working-directory: ./backend/src
-  #       run: black --check .
-
-  #     - name: Lint with flake8
-  #       working-directory: ./backend/src
-  #       run: flake8 . --max-line-length=88 --exclude=migrations
-
-  #     - name: Check import sorting with isort
-  #       working-directory: ./backend/src
-  #       run: isort --check-only .
 
   docker:
     runs-on: ubuntu-latest
