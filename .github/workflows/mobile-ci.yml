@@ -42,7 +42,7 @@ jobs:
           flags: mobile
           name: mobile-coverage
 
-  # lint:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
