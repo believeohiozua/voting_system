@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from drf_spectacular.utils import extend_schema_field
 from .models import Feature
 
 
@@ -24,9 +25,7 @@ class FeatureSerializer(serializers.ModelSerializer):
         help_text="Optional detailed description of the feature",
     )
     author = AuthorSerializer(read_only=True, help_text="User who created this feature")
-    vote_count = serializers.IntegerField(
-        read_only=True, help_text="Current number of votes"
-    )
+    vote_count = serializers.SerializerMethodField(help_text="Current number of votes")
     has_voted = serializers.SerializerMethodField(
         help_text="Whether current user has voted"
     )
@@ -58,7 +57,16 @@ class FeatureSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    def get_has_voted(self, obj):
+    @extend_schema_field(serializers.IntegerField)
+    def get_vote_count(self, obj: Feature) -> int:
+        """Get the current vote count."""
+        # Use annotated field if available, otherwise count votes
+        if hasattr(obj, "vote_count") and isinstance(obj.vote_count, int):
+            return obj.vote_count
+        return obj.votes.count()
+
+    @extend_schema_field(serializers.BooleanField)
+    def get_has_voted(self, obj: Feature) -> bool:
         """Check if the current user has voted for this feature."""
         request = self.context.get("request")
         if request and request.user.is_authenticated:

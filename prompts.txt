@@ -119,4 +119,24 @@ mpt 12: Add User Authentication System
 -----------------------------------------
 User Request: Add user authentication to properly identify users who post and upvote features, as required by the challenge specifications.
 
-My Response: Implementing Django user authentication with token-based auth for the mobile app, updating models to track feature authors and voters.
+My Response: Implementing Django user authentication with token-based auth for the mobile app, updating models to track feature authors and voters.Pro
+mpt 13: Use DATABASE_URL Environment Variable
+------------------------------------------------
+User Request: Update database configuration to use DATABASE_URL environment variable from docker-compose.
+
+My Response: Updating Django settings to parse DATABASE_URL and simplifying docker-compose database configuration.Prompt 1
+4: Separate Backend and Mobile CI Workflows
+----------------------------------------------------
+User Request: Separate backend CI from mobile CI in GitHub Actions and use correct paths.
+
+My Response: Creating separate workflow files for Django backend and React Native mobile with proper path configurations and optimized CI pipelines.Prompt 15
+: Fix OpenAPI Schema Generation Errors
+-----------------------------------------------
+System Error: OpenAPI schema generation failing due to missing type hints and JSON serialization issues.
+
+My Response: Adding proper type hints and fixing serializer schema configuration for drf-spectacular.Prompt 16: 
+Fix Persistent OpenAPI Schema JSON Serialization Error
+----------------------------------------------------------------
+System Error: Still getting SerializerMetaclass JSON serialization error in OpenAPI schema generation.
+
+My Response: Debugging and fixing the circular reference issue in the schema generation by simplifying the serializer structure and fixing the response schema definitions.

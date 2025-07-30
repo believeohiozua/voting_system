@@ -40,12 +40,12 @@ class Feature(models.Model):
     )
 
     class Meta:
-        ordering = ["-vote_count", "-created_at"]
+        # ordering = ["-vote_count", "-created_at"]
         verbose_name = "Feature Request"
         verbose_name_plural = "Feature Requests"
 
     def __str__(self):
-        return f"{self.title} ({self.vote_count} votes)"
+        return self.title
 
     @property
     def vote_count(self):

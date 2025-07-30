@@ -42,6 +42,11 @@ install:
 
 setup: install
 	@echo "🚀 Setting up project..."
+	@echo "Creating environment file..."
+	@if [ ! -f backend/.env ]; then \
+		cp backend/.env.example backend/.env; \
+		echo "Created backend/.env from example"; \
+	fi
 	@echo "Running Django migrations..."
 	cd backend/src && python manage.py makemigrations
 	cd backend/src && python manage.py migrate
@@ -115,6 +120,10 @@ test-backend:
 test-mobile:
 	@echo "🧪 Running React Native tests..."
 	cd mobile && npm test
+
+test-schema:
+	@echo "🧪 Testing OpenAPI schema generation..."
+	cd backend/src && python manage.py test_schema
 
 # Code quality commands
 lint:
@@ -194,11 +203,34 @@ info:
 	@echo "🗄️  Database:"
 	@echo "  PostgreSQL running on: localhost:5432"
 	@echo "  Database name: feature_voting"
+	@echo "  DATABASE_URL: postgresql://postgres:password@db:5432/feature_voting"
+	@echo ""
+	@echo "🔐 Authentication:"
+	@echo "  JWT tokens for mobile app authentication"
+	@echo "  Register: POST /api/auth/register/"
+	@echo "  Login: POST /api/auth/login/"
 	@echo ""
 	@echo "📁 Project Structure:"
 	@echo "  backend/src/     - Django application"
 	@echo "  mobile/          - React Native app"
 	@echo "  backend/docker-compose.yml - Database setup"
+
+# CI/CD commands
+ci-backend:
+	@echo "🔄 Running backend CI locally..."
+	cd backend && pip install -r requirements.txt
+	cd backend/src && python manage.py test
+	cd backend/src && black --check .
+	cd backend/src && flake8 . --max-line-length=88 --exclude=migrations
+
+ci-mobile:
+	@echo "🔄 Running mobile CI locally..."
+	cd mobile && npm ci
+	cd mobile && npm test -- --watchAll=false
+	cd mobile && npm run lint
+
+ci-all: ci-backend ci-mobile
+	@echo "✅ All CI checks passed locally!"
 
 # Quick development commands
 quick-start: docker-db

@@ -16,7 +16,31 @@ from .serializers import (
     summary="Register a new user",
     description="Create a new user account with username, email, and password.",
     request=UserRegistrationSerializer,
-    responses={201: UserProfileSerializer},
+    responses={
+        201: {
+            "type": "object",
+            "properties": {
+                "user": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "integer"},
+                        "username": {"type": "string"},
+                        "email": {"type": "string"},
+                        "first_name": {"type": "string"},
+                        "last_name": {"type": "string"},
+                        "date_joined": {"type": "string", "format": "date-time"},
+                    },
+                },
+                "tokens": {
+                    "type": "object",
+                    "properties": {
+                        "refresh": {"type": "string"},
+                        "access": {"type": "string"},
+                    },
+                },
+            },
+        }
+    },
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -50,7 +74,26 @@ def register(request):
     responses={
         200: {
             "type": "object",
-            "properties": {"user": UserProfileSerializer, "tokens": {"type": "object"}},
+            "properties": {
+                "user": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "integer"},
+                        "username": {"type": "string"},
+                        "email": {"type": "string"},
+                        "first_name": {"type": "string"},
+                        "last_name": {"type": "string"},
+                        "date_joined": {"type": "string", "format": "date-time"},
+                    },
+                },
+                "tokens": {
+                    "type": "object",
+                    "properties": {
+                        "refresh": {"type": "string"},
+                        "access": {"type": "string"},
+                    },
+                },
+            },
         }
     },
 )

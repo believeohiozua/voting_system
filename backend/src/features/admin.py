@@ -5,6 +5,31 @@ from django.utils.safestring import mark_safe
 from .models import Feature
 
 
+class VotesFilter(admin.SimpleListFilter):
+    title = "Votes"
+    parameter_name = "votes"
+
+    def lookups(self, request, model_admin):
+        return [
+            ("0", "0 votes"),
+            ("1-4", "1–4 votes"),
+            ("5-9", "5–9 votes"),
+            ("10+", "10+ votes"),
+        ]
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == "0":
+            return queryset.filter(votes=0)
+        elif value == "1-4":
+            return queryset.filter(votes__gte=1, votes__lte=4)
+        elif value == "5-9":
+            return queryset.filter(votes__gte=5, votes__lte=9)
+        elif value == "10+":
+            return queryset.filter(votes__gte=10)
+        return queryset
+
+
 @admin.register(Feature)
 class FeatureAdmin(admin.ModelAdmin):
     """
@@ -25,14 +50,14 @@ class FeatureAdmin(admin.ModelAdmin):
     list_filter = [
         "created_at",
         "updated_at",
-        ("votes", admin.SimpleListFilter),
+        VotesFilter,
     ]
 
     # Search functionality
     search_fields = ["title", "description"]
 
     # Ordering
-    ordering = ["-votes", "-created_at"]
+    # ordering = ["-votes", "-created_at"]
 
     # Read-only fields
     readonly_fields = ["id", "votes", "created_at", "updated_at", "votes_chart"]
@@ -73,9 +98,10 @@ class FeatureAdmin(admin.ModelAdmin):
 
     def votes_badge(self, obj):
         """Display votes with colored badge."""
-        if obj.votes >= 10:
+        vote_count = obj.vote_count
+        if vote_count >= 10:
             color = "#28a745"  # Green for popular
-        elif obj.votes >= 5:
+        elif vote_count >= 5:
             color = "#ffc107"  # Yellow for moderate
         else:
             color = "#6c757d"  # Gray for low votes
@@ -84,11 +110,10 @@ class FeatureAdmin(admin.ModelAdmin):
             '<span style="background-color: {}; color: white; padding: 3px 8px; '
             'border-radius: 12px; font-size: 12px; font-weight: bold;">{} votes</span>',
             color,
-            obj.votes,
+            vote_count,
         )
 
     votes_badge.short_description = "Votes"
-    votes_badge.admin_order_field = "votes"
 
     def created_at_formatted(self, obj):
         """Format creation date nicely."""
@@ -117,12 +142,13 @@ class FeatureAdmin(admin.ModelAdmin):
 
     def votes_chart(self, obj):
         """Simple visual representation of votes."""
-        if obj.votes == 0:
+        vote_count = obj.vote_count
+        if vote_count == 0:
             return "No votes yet"
 
         # Create a simple bar chart using HTML/CSS
         max_width = 200
-        bar_width = min(obj.votes * 10, max_width)
+        bar_width = min(vote_count * 10, max_width)
 
         return format_html(
             '<div style="background: #e9ecef; width: {}px; height: 20px; border-radius: 10px;">'
@@ -132,7 +158,7 @@ class FeatureAdmin(admin.ModelAdmin):
             "{} votes</div></div>",
             max_width,
             bar_width,
-            obj.votes,
+            vote_count,
         )
 
     votes_chart.short_description = "Vote Visualization"

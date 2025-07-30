@@ -3,8 +3,9 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, extend_schema_view
+from django.db.models import Count
 from .models import Feature
-from .serializers import FeatureSerializer
+from .simple_serializers import SimpleFeatureSerializer as FeatureSerializer
 
 
 @extend_schema_view(
@@ -46,7 +47,12 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Return features ordered by vote count."""
-        return Feature.objects.prefetch_related("author", "votes").all()
+        return (
+            Feature.objects.select_related("author")
+            .prefetch_related("votes")
+            .annotate(vote_count=Count("votes"))
+            .order_by("-vote_count", "-created_at")
+        )
 
     def perform_create(self, serializer):
         """Set the author to the current user when creating a feature."""

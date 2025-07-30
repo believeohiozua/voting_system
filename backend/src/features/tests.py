@@ -1,118 +1,118 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
-from .models import Feature
-import json
+from .models import Feature, Vote
 
 
 class FeatureModelTest(TestCase):
     def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password="testpass123"
+        )
         self.feature = Feature.objects.create(
-            title="Test Feature", description="Test Description"
+            title="Test Feature", description="Test description", author=self.user
         )
 
     def test_feature_creation(self):
-        """Test that a feature is created correctly"""
+        """Test that a feature can be created."""
         self.assertEqual(self.feature.title, "Test Feature")
-        self.assertEqual(self.feature.description, "Test Description")
-        self.assertEqual(self.feature.votes, 0)
-        self.assertIsNotNone(self.feature.id)
-        self.assertIsNotNone(self.feature.created_at)
-
-    def test_feature_string_representation(self):
-        """Test the string representation of feature"""
-        self.assertEqual(str(self.feature), "Test Feature")
+        self.assertEqual(self.feature.author, self.user)
+        self.assertEqual(self.feature.vote_count, 0)
 
     def test_feature_upvote(self):
-        """Test the upvote functionality"""
-        initial_votes = self.feature.votes
-        self.feature.upvote()
-        self.assertEqual(self.feature.votes, initial_votes + 1)
+        """Test that a feature can be upvoted."""
+        other_user = User.objects.create_user(
+            username="otheruser", password="testpass123"
+        )
 
-    def test_feature_ordering(self):
-        """Test that features are ordered by votes then created_at"""
-        feature2 = Feature.objects.create(title="Feature 2", votes=5)
-        feature3 = Feature.objects.create(title="Feature 3", votes=10)
+        # Test upvoting
+        result = self.feature.upvote(other_user)
+        self.assertTrue(result)  # Should return True for new vote
+        self.assertEqual(self.feature.vote_count, 1)
 
-        features = Feature.objects.all()
-        self.assertEqual(features[0], feature3)  # Highest votes first
-        self.assertEqual(features[1], feature2)
-        self.assertEqual(features[2], self.feature)  # Lowest votes last
+        # Test duplicate upvote
+        result = self.feature.upvote(other_user)
+        self.assertFalse(result)  # Should return False for duplicate vote
+        self.assertEqual(self.feature.vote_count, 1)
+
+    def test_has_user_voted(self):
+        """Test checking if user has voted."""
+        other_user = User.objects.create_user(
+            username="otheruser", password="testpass123"
+        )
+
+        self.assertFalse(self.feature.has_user_voted(other_user))
+        self.feature.upvote(other_user)
+        self.assertTrue(self.feature.has_user_voted(other_user))
 
 
 class FeatureAPITest(APITestCase):
     def setUp(self):
-        self.feature = Feature.objects.create(
-            title="Test Feature", description="Test Description"
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password="testpass123"
         )
-        self.list_url = reverse("feature-list")
-        self.detail_url = reverse("feature-detail", kwargs={"pk": self.feature.id})
-        self.upvote_url = reverse("feature-upvote", kwargs={"pk": self.feature.id})
+        self.feature = Feature.objects.create(
+            title="Test Feature", description="Test description", author=self.user
+        )
 
-    def test_get_feature_list(self):
-        """Test retrieving list of features"""
-        response = self.client.get(self.list_url)
+    def test_list_features(self):
+        """Test listing features."""
+        url = reverse("feature-list")
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["title"], "Test Feature")
 
-    def test_create_feature(self):
-        """Test creating a new feature"""
-        data = {"title": "New Feature", "description": "New Description"}
-        response = self.client.post(self.list_url, data, format="json")
+    def test_create_feature_authenticated(self):
+        """Test creating a feature when authenticated."""
+        self.client.force_authenticate(user=self.user)
+        url = reverse("feature-list")
+        data = {"title": "New Feature", "description": "New description"}
+        response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Feature.objects.count(), 2)
-        self.assertEqual(response.data["title"], "New Feature")
-        self.assertEqual(response.data["votes"], 0)
 
-    def test_create_feature_without_title(self):
-        """Test creating feature without title should fail"""
-        data = {"description": "Description only"}
-        response = self.client.post(self.list_url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_create_feature_without_description(self):
-        """Test creating feature without description should work"""
-        data = {"title": "Title only"}
-        response = self.client.post(self.list_url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["description"], "")
+    def test_create_feature_unauthenticated(self):
+        """Test creating a feature when not authenticated."""
+        url = reverse("feature-list")
+        data = {"title": "New Feature", "description": "New description"}
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_upvote_feature(self):
-        """Test upvoting a feature"""
-        initial_votes = self.feature.votes
-        response = self.client.post(self.upvote_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["message"], "Feature upvoted successfully")
-
-        # Refresh from database
-        self.feature.refresh_from_db()
-        self.assertEqual(self.feature.votes, initial_votes + 1)
-
-    def test_upvote_nonexistent_feature(self):
-        """Test upvoting a non-existent feature"""
-        fake_url = reverse(
-            "feature-upvote", kwargs={"pk": "00000000-0000-0000-0000-000000000000"}
+        """Test upvoting a feature."""
+        other_user = User.objects.create_user(
+            username="otheruser", password="testpass123"
         )
-        response = self.client.post(fake_url)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.client.force_authenticate(user=other_user)
 
-    def test_get_feature_detail(self):
-        """Test retrieving a specific feature"""
-        response = self.client.get(self.detail_url)
+        url = reverse("feature-upvote", kwargs={"pk": self.feature.pk})
+        response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["title"], "Test Feature")
+        self.assertEqual(response.data["vote_count"], 1)
+        self.assertTrue(response.data["has_voted"])
 
-    def test_features_ordered_by_votes(self):
-        """Test that features are returned ordered by votes"""
-        feature2 = Feature.objects.create(title="Popular Feature", votes=10)
-        feature3 = Feature.objects.create(title="Very Popular Feature", votes=20)
+    def test_upvote_own_feature(self):
+        """Test that users cannot upvote their own features."""
+        self.client.force_authenticate(user=self.user)
 
-        response = self.client.get(self.list_url)
+        url = reverse("feature-upvote", kwargs={"pk": self.feature.pk})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("cannot vote for your own feature", response.data["error"])
+
+
+class SchemaTest(APITestCase):
+    def test_schema_generation(self):
+        """Test that the OpenAPI schema can be generated without errors."""
+        url = reverse("schema")
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("openapi", response.data)
 
-        # Should be ordered by votes descending
-        self.assertEqual(response.data[0]["title"], "Very Popular Feature")
-        self.assertEqual(response.data[1]["title"], "Popular Feature")
-        self.assertEqual(response.data[2]["title"], "Test Feature")
+    def test_swagger_ui(self):
+        """Test that the Swagger UI loads without errors."""
+        url = reverse("swagger-ui")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

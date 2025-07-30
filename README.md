@@ -81,6 +81,9 @@ Run `make help` to see all available commands:
 - `make mobile` - Start React Native Android app
 - `make docker-db` - Start PostgreSQL database
 - `make test` - Run all tests
+- `make ci-backend` - Run backend CI locally
+- `make ci-mobile` - Run mobile CI locally
+- `make ci-all` - Run all CI checks locally
 - `make clean` - Clean up generated files
 
 ### URLs
@@ -128,6 +131,47 @@ The API includes interactive Swagger/OpenAPI documentation:
 - Users can only vote once per feature
 - Users cannot vote for their own features
 - Only feature authors can update/delete their features
+
+## Environment Configuration
+
+The application uses `DATABASE_URL` for database configuration:
+
+- **Docker**: `postgresql://postgres:password@db:5432/feature_voting`
+- **Local**: `postgresql://postgres:password@localhost:5432/feature_voting`
+
+Copy `backend/.env.example` to `backend/.env` and adjust as needed.
+
+## CI/CD Pipeline
+
+The project uses separate GitHub Actions workflows for optimal performance:
+
+### Backend CI (`backend-ci.yml`)
+
+- **Triggers**: Changes to `backend/` directory
+- **Jobs**: Test, Lint, Docker Build, Security Scan
+- **Database**: PostgreSQL service container
+- **Coverage**: Uploaded to Codecov
+
+### Mobile CI (`mobile-ci.yml`)
+
+- **Triggers**: Changes to `mobile/` directory
+- **Jobs**: Test, Lint, Build, Android APK (main branch)
+- **Node.js**: Version 18 with npm caching
+- **Security**: npm audit and vulnerability scanning
+
+### Full CI (`full-ci.yml`)
+
+- **Triggers**: Main branch pushes, manual dispatch
+- **Features**: Path-based change detection, integration testing
+- **Integration**: End-to-end API and mobile bundle testing
+
+Run CI checks locally:
+
+```bash
+make ci-backend  # Backend tests and linting
+make ci-mobile   # Mobile tests and linting
+make ci-all      # All CI checks
+```
 
 ## Project Structure
 
