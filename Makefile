@@ -16,20 +16,24 @@ help:
 	@echo "  make sample-data    - Create sample feature data"
 	@echo ""
 	@echo "Development Commands:"
-	@echo "  make backend        - Start Django development server"
+	@echo "  make backend        - Start Django development server (in container)"
 	@echo "  make mobile         - Start React Native Android app"
 	@echo "  make docker-db      - Start PostgreSQL with Docker"
 	@echo "  make docker-backend - Start full backend with Docker"
+	@echo "  make docker-shell   - Open shell in backend container"
 	@echo ""
 	@echo "Utility Commands:"
 	@echo "  make clean          - Clean up generated files"
-	@echo "  make test           - Run all tests"
+	@echo "  make test           - Run all tests (in containers)"
+	@echo "  make test-schema    - Test OpenAPI schema generation"
 	@echo "  make lint           - Run code linting"
 	@echo "  make format         - Format code"
-	@echo "  make logs           - Show Docker logs"
+	@echo "  make docker-logs    - Show all Docker logs"
+	@echo "  make docker-logs-backend - Show backend logs"
+	@echo "  make docker-logs-db - Show database logs"
 	@echo ""
 	@echo "Quick Start:"
-	@echo "  make setup && make docker-db && make backend"
+	@echo "  make setup && make backend"
 
 # Installation commands
 install:
@@ -40,36 +44,37 @@ install:
 	cd mobile && npm install
 	@echo "✅ All dependencies installed!"
 
-setup: install
+setup: install docker-db
 	@echo "🚀 Setting up project..."
 	@echo "Creating environment file..."
 	@if [ ! -f backend/.env ]; then \
 		cp backend/.env.example backend/.env; \
 		echo "Created backend/.env from example"; \
 	fi
+	@echo "Waiting for database to be ready..."
+	@sleep 5
 	@echo "Running Django migrations..."
-	cd backend/src && python manage.py makemigrations
-	cd backend/src && python manage.py migrate
+	make migrate
 	@echo "✅ Project setup complete!"
 	@echo ""
 	@echo "Next steps:"
 	@echo "1. Run 'make superuser' to create an admin user"
-	@echo "2. Run 'make docker-db' to start the database"
+	@echo "2. Run 'make sample-data' to create sample data"
 	@echo "3. Run 'make backend' to start the Django server"
 
 migrate:
 	@echo "🔄 Running Django migrations..."
-	cd backend/src && python manage.py makemigrations
-	cd backend/src && python manage.py migrate
+	docker compose exec backend python manage.py makemigrations
+	docker compose exec backend python manage.py migrate
 	@echo "✅ Migrations complete!"
 
 superuser:
 	@echo "👤 Creating Django superuser..."
-	cd backend/src && python manage.py createsuperuser
+	cd backend && docker compose exec backend python manage.py createsuperuser
 
 sample-data:
 	@echo "📊 Creating sample feature data..."
-	cd backend/src && python manage.py create_sample_data
+	cd backend && docker compose exec backend python manage.py create_sample_data
 	@echo "✅ Sample data created!"
 
 # Development commands
@@ -79,7 +84,7 @@ backend:
 	@echo "Swagger docs at: http://localhost:8000/"
 	@echo "Admin interface at: http://localhost:8000/admin/"
 	@echo ""
-	cd backend/src && python manage.py runserver
+	cd backend && docker compose exec backend python manage.py runserver 0.0.0.0:8000
 
 mobile:
 	@echo "📱 Starting React Native Android app..."
@@ -104,18 +109,34 @@ docker-logs:
 	@echo "📋 Showing Docker logs..."
 	cd backend && docker-compose logs -f
 
+docker-shell:
+	@echo "🐚 Opening shell in backend container..."
+	cd backend && docker compose exec backend bash
+
+docker-logs-backend:
+	@echo "📋 Showing backend logs..."
+	cd backend && docker-compose logs -f backend
+
+docker-logs-db:
+	@echo "📋 Showing database logs..."
+	cd backend && docker-compose logs -f db
+
+docker-ps:
+	@echo "📊 Docker container status..."
+	cd backend && docker-compose ps
+
 # Testing commands
 test:
 	@echo "🧪 Running tests..."
 	@echo "Running Django tests..."
-	cd backend/src && python manage.py test
+	cd backend && docker compose exec backend python manage.py test
 	@echo "Running React Native tests..."
 	cd mobile && npm test
 	@echo "✅ All tests completed!"
 
 test-backend:
 	@echo "🧪 Running Django tests..."
-	cd backend/src && python manage.py test
+	cd backend && docker compose exec backend python manage.py test
 
 test-mobile:
 	@echo "🧪 Running React Native tests..."
@@ -123,7 +144,7 @@ test-mobile:
 
 test-schema:
 	@echo "🧪 Testing OpenAPI schema generation..."
-	cd backend/src && python manage.py test_schema
+	cd backend && docker compose exec backend python manage.py test_schema
 
 # Code quality commands
 lint:
@@ -161,7 +182,10 @@ reset-db:
 	@echo "✅ Database reset complete!"
 
 # Development workflow shortcuts
-dev: docker-db backend
+dev: docker-db
+	@echo "⚡ Starting development environment..."
+	@sleep 3
+	@make backend
 
 full-setup: setup superuser sample-data
 	@echo "🎉 Full setup complete!"
@@ -218,10 +242,14 @@ info:
 # CI/CD commands
 ci-backend:
 	@echo "🔄 Running backend CI locally..."
-	cd backend && pip install -r requirements.txt
-	cd backend/src && python manage.py test
-	cd backend/src && black --check .
-	cd backend/src && flake8 . --max-line-length=88 --exclude=migrations
+	@echo "Starting database for tests..."
+	make docker-db
+	@sleep 5
+	@echo "Running Django tests..."
+	cd backend && docker compose exec backend python manage.py test
+	@echo "Running code quality checks..."
+	cd backend && docker compose exec backend black --check .
+	cd backend && docker compose exec backend flake8 . --max-line-length=88 --exclude=migrations
 
 ci-mobile:
 	@echo "🔄 Running mobile CI locally..."
