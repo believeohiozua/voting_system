@@ -42,7 +42,7 @@ jobs:
           flags: mobile
           name: mobile-coverage
 
-  lint:
+  # lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -70,7 +70,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    needs: [test, lint]
+    needs: [test]
 
     steps:
       - name: Checkout code

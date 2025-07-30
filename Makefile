@@ -89,7 +89,17 @@ backend:
 mobile:
 	@echo "📱 Starting React Native Android app..."
 	@echo "Make sure you have Android emulator running or device connected"
+	@if [ ! -f mobile/android/app/debug.keystore ]; then \
+		echo "Generating debug keystore..."; \
+		cd mobile/android && ./generate-keystore.sh; \
+	fi
 	cd mobile && npx react-native run-android
+
+mobile-setup:
+	@echo "🔧 Setting up React Native Android..."
+	cd mobile && npm install
+	cd mobile/android && ./generate-keystore.sh
+	@echo "✅ Mobile setup complete!"
 
 # Docker commands
 docker-db:
