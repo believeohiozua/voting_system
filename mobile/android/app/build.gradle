@@ -1,6 +1,13 @@
 apply plugin: "com.android.application"
 apply plugin: "com.facebook.react"
 
+project.ext.react = [
+    enableHermes: false,  // clean and rebuild if changing
+]
+
+def enableProguardInReleaseBuilds = false
+def jscFlavor = 'org.webkit:android-jsc:+'
+
 /**
  * This is the configuration block to customize your React Native Android app.
  */
@@ -51,7 +58,6 @@ react {
 
 android {
     ndkVersion rootProject.ext.ndkVersion
-
     compileSdkVersion rootProject.ext.compileSdkVersion
 
     namespace "com.featurevotingapp"
@@ -61,6 +67,11 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     signingConfigs {
@@ -80,7 +91,7 @@ android {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.debug
-            minifyEnabled enableProguardInReleaseBuilds
+            minifyEnabled false
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
@@ -90,8 +101,14 @@ dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
-    if (hermesEnabled.toBoolean()) {
-        implementation("com.facebook.react:hermes-android")
+    def isGifEnabled = (findProperty('react.enableGif') ?: "") == "true";
+    def isWebpEnabled = (findProperty('react.enableWebp') ?: "") == "true";
+    def isWebpAnimatedEnabled = (findProperty('react.enableWebpAnimated') ?: "") == "true";
+    def enableHermes = project.ext.react.get("enableHermes", false);
+
+    if (enableHermes) {
+        //noinspection GradleDynamicVersion
+        implementation("com.facebook.react:hermes-engine:+") // From node_modules
     } else {
         implementation jscFlavor
     }
