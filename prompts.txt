@@ -1,0 +1,117 @@
+FEATURE VOTING SYSTEM - AI DEVELOPMENT CHALLENGE
+=================================================
+
+Prompt 1: Initial Setup and Planning
+------------------------------------
+User Request: Build a Feature Voting System with database, backend API, and frontend UI (web + mobile). 
+Requirements:
+- Users can post features
+- Users can upvote other features  
+- Database for persistence
+- Backend API
+- Frontend UI (web + mobile - choosing iOS)
+- 90-150 minute timeframe
+
+My Response: Starting with project structure planning and implementation approach.
+
+Prompt 2: Tech Stack Change Request
+-----------------------------------
+User Request: Change tech stack to:
+- Backend: Django (instead of Node.js/Express)
+- Frontend: React Native for Android (instead of web + iOS)
+- Database: PostgreSQL containerized with Docker (instead of SQLite)
+
+My Response: Rebuilding project with Django REST API, React Native Android app, and Docker PostgreSQL setup.
+P
+rompt 3: Django Backend Setup Complete
+---------------------------------------
+User Update: Django app is now created in the backend folder.
+
+My Response: Checking backend structure and proceeding with React Native Android app setup.P
+rompt 4: Complete Feature Voting System Implementation
+-------------------------------------------------------
+My Response: Created complete feature voting system with:
+
+BACKEND (Django REST API):
+- Django project with PostgreSQL database
+- Features app with models, serializers, views
+- REST API endpoints for CRUD operations and upvoting
+- Docker containerization for PostgreSQL
+- CORS enabled for mobile app communication
+
+MOBILE APP (React Native Android):
+- TypeScript React Native app
+- Feature creation form with title/description
+- Feature list with upvote functionality
+- API integration with axios
+- Android-specific configuration
+- Material Design-inspired UI
+
+KEY FEATURES IMPLEMENTED:
+✅ Database: PostgreSQL with Docker
+✅ Backend API: Django REST Framework
+✅ Frontend UI: React Native for Android
+✅ Create features functionality
+✅ Upvote features functionality
+✅ Real-time data fetching
+✅ Error handling and user feedback
+✅ Responsive mobile UI
+
+ARCHITECTURE:
+- Clean separation between backend and frontend
+- RESTful API design
+- Containerized database
+- Mobile-first responsive design
+- Production-ready structure
+
+The system is fully functional and ready for development/testing.Pr
+ompt 5: Backend Structure Reorganization
+------------------------------------------
+User Request: Reorganize backend folder structure - put Django code in src/ subfolder, keep Docker files in backend root.
+
+My Response: Restructuring backend to separate Django source code from Docker configuration.Prom
+pt 6: Add .gitignore and Clean Up Redundant Folders
+-------------------------------------------------------
+User Request: Add .gitignore file compatible with Python and Node.js, remove redundant folders.
+
+My Response: Creating comprehensive .gitignore and removing old Django folders from backend root.Pr
+ompt 7: Move Docker Compose to Backend Folder
+-----------------------------------------------
+User Request: Move docker-compose.yml to backend folder with Dockerfile.
+
+My Response: Moving docker-compose.yml to backend folder and updating paths accordingly.Prompt 8:
+ Add Tests and CI Pipeline
+------------------------------------
+User Request: Add tests for the feature voting functionality and GitHub Actions CI pipeline.
+Core functionality confirmed:
+1. Let users post a feature
+2. Let users upvote others' posted features
+
+My Response: Adding Django tests, React Native tests, and GitHub Actions CI/CD pipeline.Prompt 8:
+ Final Project Structure Complete
+------------------------------------------
+System Update: Kiro IDE applied autofix/formatting to README.md and package.json files.
+
+Final Status: Feature Voting System is now fully organized with:
+✅ Clean backend structure (Django in src/, Docker configs in backend/)
+✅ Comprehensive .gitignore for Python/Node.js
+✅ All redundant folders removed
+✅ Updated documentation and scripts
+✅ Auto-formatted files for consistency
+
+Project is ready for development and deployment.Pro
+mpt 9: Add OpenAPI Swagger Documentation Landing Page
+--------------------------------------------------------
+User Request: Make the landing page an OpenAPI Swagger documentation.
+
+My Response: Adding drf-spectacular for OpenAPI/Swagger documentation as the root landing page.Pro
+mpt 10: Add Enhanced Django Admin Interface
+-----------------------------------------------
+User Request: Add a nice admin interface using admin.py script.
+
+My Response: Creating a comprehensive Django admin interface with custom features for managing the Feature Voting System.Pro
+mpt 11: Replace package.json with Makefile
+--------------------------------------------
+User Request: Replace package.json root scripts with bash/Makefile approach.
+
+My Response: Creating a comprehensive Makefile for project management and removing package.json dependency.
