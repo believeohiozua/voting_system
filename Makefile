@@ -88,6 +88,10 @@ backend:
 mobile:
 	@echo "📱 Starting React Native Android app..."
 	@echo "Make sure you have Android emulator running or device connected"
+	@if [ ! -f mobile/android/gradle/wrapper/gradle-wrapper.jar ]; then \
+		echo "Setting up Gradle wrapper..."; \
+		cd mobile/android && ./setup-gradle.sh; \
+	fi
 	@if [ ! -f mobile/android/app/debug.keystore ]; then \
 		echo "Generating debug keystore..."; \
 		cd mobile/android && ./generate-keystore.sh; \
@@ -97,6 +101,7 @@ mobile:
 mobile-setup:
 	@echo "🔧 Setting up React Native Android..."
 	cd mobile && npm install
+	cd mobile/android && ./setup-gradle.sh
 	cd mobile/android && ./generate-keystore.sh
 	@echo "✅ Mobile setup complete!"
 
