@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 import uuid
 
 
@@ -19,8 +20,17 @@ class Feature(models.Model):
     description = models.TextField(
         blank=True, help_text="Optional detailed description of the feature"
     )
-    votes = models.IntegerField(
-        default=0, help_text="Number of votes this feature has received"
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="authored_features",
+        help_text="User who created this feature request",
+    )
+    voters = models.ManyToManyField(
+        User,
+        through="Vote",
+        related_name="voted_features",
+        help_text="Users who have voted for this feature",
     )
     created_at = models.DateTimeField(
         auto_now_add=True, help_text="When the feature was created"
@@ -30,14 +40,47 @@ class Feature(models.Model):
     )
 
     class Meta:
-        ordering = ["-votes", "-created_at"]
+        ordering = ["-vote_count", "-created_at"]
         verbose_name = "Feature Request"
         verbose_name_plural = "Feature Requests"
 
     def __str__(self):
-        return f"{self.title} ({self.votes} votes)"
+        return f"{self.title} ({self.vote_count} votes)"
 
-    def upvote(self):
-        """Increment the vote count by 1."""
-        self.votes += 1
-        self.save()
+    @property
+    def vote_count(self):
+        """Get the current vote count."""
+        return self.votes.count()
+
+    def upvote(self, user):
+        """Add a vote from a user if they haven't voted already."""
+        vote, created = Vote.objects.get_or_create(feature=self, user=user)
+        return created  # Returns True if vote was created, False if already existed
+
+    def remove_vote(self, user):
+        """Remove a user's vote."""
+        return Vote.objects.filter(feature=self, user=user).delete()[0] > 0
+
+    def has_user_voted(self, user):
+        """Check if a user has voted for this feature."""
+        if user.is_anonymous:
+            return False
+        return self.votes.filter(user=user).exists()
+
+
+class Vote(models.Model):
+    """
+    Model representing a vote on a feature by a user.
+    """
+
+    feature = models.ForeignKey(Feature, on_delete=models.CASCADE, related_name="votes")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="votes")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ["feature", "user"]  # One vote per user per feature
+        verbose_name = "Vote"
+        verbose_name_plural = "Votes"
+
+    def __str__(self):
+        return f"{self.user.username} voted for {self.feature.title}"

@@ -99,13 +99,23 @@ The API includes interactive Swagger/OpenAPI documentation:
 
 ## API Endpoints
 
-- `GET /api/features/` - List all features
-- `POST /api/features/` - Create a new feature
-- `GET /api/features/{id}/` - Get a specific feature
-- `PUT /api/features/{id}/` - Update a feature
-- `PATCH /api/features/{id}/` - Partially update a feature
-- `DELETE /api/features/{id}/` - Delete a feature
-- `POST /api/features/{id}/upvote/` - Upvote a feature
+### Authentication
+
+- `POST /api/auth/register/` - Register a new user
+- `POST /api/auth/login/` - Login user (returns JWT tokens)
+- `GET /api/auth/profile/` - Get user profile (requires auth)
+- `POST /api/auth/token/refresh/` - Refresh JWT token
+
+### Features
+
+- `GET /api/features/` - List all features (public)
+- `POST /api/features/` - Create a new feature (requires auth)
+- `GET /api/features/{id}/` - Get a specific feature (public)
+- `PUT /api/features/{id}/` - Update a feature (author only)
+- `PATCH /api/features/{id}/` - Partially update a feature (author only)
+- `DELETE /api/features/{id}/` - Delete a feature (author only)
+- `POST /api/features/{id}/upvote/` - Upvote a feature (requires auth)
+- `DELETE /api/features/{id}/remove_vote/` - Remove vote from a feature (requires auth)
 
 ## Development Notes
 
@@ -113,6 +123,11 @@ The API includes interactive Swagger/OpenAPI documentation:
 - CORS is enabled for development
 - Database runs on port 5432
 - Django runs on port 8000
+- JWT authentication is used for mobile app
+- Users must register/login to create features and vote
+- Users can only vote once per feature
+- Users cannot vote for their own features
+- Only feature authors can update/delete their features
 
 ## Project Structure
 

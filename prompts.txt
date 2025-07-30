@@ -114,4 +114,9 @@ mpt 11: Replace package.json with Makefile
 --------------------------------------------
 User Request: Replace package.json root scripts with bash/Makefile approach.
 
-My Response: Creating a comprehensive Makefile for project management and removing package.json dependency.
+My Response: Creating a comprehensive Makefile for project management and removing package.json dependency.Pro
+mpt 12: Add User Authentication System
+-----------------------------------------
+User Request: Add user authentication to properly identify users who post and upvote features, as required by the challenge specifications.
+
+My Response: Implementing Django user authentication with token-based auth for the mobile app, updating models to track feature authors and voters.
